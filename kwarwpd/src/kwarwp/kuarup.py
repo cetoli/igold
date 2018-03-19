@@ -100,6 +100,10 @@ class Elemento:
     def empurrando(self, x, y, dx, dy, movement, canvas):
         pass
 
+    def _mover(self, x, y, glif, canvas=None):
+        self.image = canvas.image(glif, x, y, HS*0.7, HS*0.7) if canvas else None
+        pass
+
     def move(self, x, y, movimento, canvas):
         self.x, self.y = x, y
         self.pinta(canvas)
@@ -138,7 +142,7 @@ class Elemento:
     def pinta(self, canvas):
         imgxy = self.imgxy
         # print("self.x, self.y, self.glifo_imagem", self.x, self.y, self.glifo_imagem)
-        self.image.mover(self.x * STEPX + DX, self.y * STEPY + DY, self.glifo_imagem)
+        self.image.mover(self.x * STEPX + DX, self.y * STEPY + DY, self.glifo_imagem, canvas=canvas)
 
 
 class Empty(Elemento):
@@ -508,6 +512,9 @@ class Grande(Elemento):
         self.cenario.sai(self, x, y)
         self.x, self.y = x, y
         movimento(self)
+
+    def _mover(self, *_, **kwargs):
+        pass
 
     def move(self, x, y, movimento, canvas):
         self.cenario.move(
