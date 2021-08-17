@@ -25,10 +25,10 @@ from random import shuffle
 from browser import timer
 
 from tesouro.tesouro import Jogo
-from vitollino.main import Elemento, Cena, Codigo, STYLE
+from vitollino.main import Elemento, Cena, Codigo, STYLE, INVENTARIO as IV
 
 # from _spy.vitollino.main import Elemento, Cena, Codigo, STYLE
-WIDTH = 800
+WIDTH = 1200
 STYLE["width"] = WIDTH
 STYLE["height"] = "650px"
 
@@ -56,7 +56,7 @@ IMGS = dict(
     TEMPLOTRAS2="Introducao_a_Computacao/Untitled_20180828_110148.jpg",
     TEMPLOTRAS3="Introducao_a_Computacao/Untitled_20180828_110145.jpg",
     CARTASENTRAESAI="Introducao_a_Computacao/Untitled_20180828_105727.jpg",
-    CARTASENTRAESAITRAS="Introducao_a_Computacao/Untitled_20180828_105833-0.jpg",
+    CARTASENTRAESAITRAS="Introducao_a_Computacao/verso_entra_sai.png",
     CARTASTRAS="Introducao_a_Computacao/Untitled_20180828_105833-2.jpg",
     ARTEFATOS1="Introducao_a_Computacao/Untitled_20180828_105529.jpg",
     ARTEFATOS2="Introducao_a_Computacao/Untitled_20180828_105528.jpg",
@@ -67,7 +67,7 @@ IMGS = dict(
 IMGS = {key: ACTIVE + img + POS for key, img in IMGS.items()}
 _SPRITES = dict(
     desabe=(IMGS["MOSTROS"], 0), aranha=(IMGS["MOSTROS"], 1), cobra=(IMGS["MOSTROS"], 2),
-    fogo=(IMGS["MOSTROS1"], 0), mumia=(IMGS["MOSTROS1"], 1),
+    fogo=(IMGS["MOSTROS1"], 0), mumia=(IMGS["MOSTROS1"], 1), aposta=(IMGS["CARTASENTRAESAITRAS"], 1),
     estatua=(IMGS["ARTEFATOS1"], 0), vaso=(IMGS["ARTEFATOS1"], 1), broche=(IMGS["ARTEFATOS1"], 2),
     colar=(IMGS["ARTEFATOS2"], 0), idolo=(IMGS["ARTEFATOS2"], 1), decide=(IMGS["CARTASENTRAESAI"], 1),
     t1=(IMGS["PEDRAS1"], 0), t2=(IMGS["PEDRAS1"], 1), t4=(IMGS["PEDRAS1"], 2), t5=(IMGS["PEDRAS2"], 0),
@@ -77,15 +77,20 @@ _SPRITES = dict(
 SPRITES = {key: dict(img=img, index=ind, tit=key) for key, (img, ind) in _SPRITES.items()}
 FASES = dict(f1=(IMGS["TEMPLOTRAS1"], 1), f2=(IMGS["TEMPLOTRAS1"], 0),
              f3=(IMGS["TEMPLOTRAS2"], 1), f4=(IMGS["TEMPLOTRAS2"], 0),
-             f5=(IMGS["TEMPLOTRAS3"], 0, 800))
+             f5=(IMGS["TEMPLOTRAS3"], 0, 1))
+CRDW = 120
+CRDH = 200
 
 
 class Sprite(Elemento):
-    def __init__(self, img, index=0, tit="", w=70, h=120, delta=210):
+    def __init__(self, img, index=0, tit="", w=CRDW, h=CRDH, delta=CRDW*3):
         super().__init__(img, style=dict(position="relative", float="left", tit=tit,
-                                         width=w, height="{}px".format(h), overflow="hidden"))
-        self.style.marginLeft = "-{}px".format(index * w)
-        self.style.width = self.style.maxWidth = "{}px".format(delta)
+                                         width=w, height="{}px".format(h), overflow="hidden"),
+                         tipo=f'{delta} {h}')
+        # self.style.marginLeft = "-{}px".format(index * w)
+        # self.style.width = self.style.maxWidth = "{}px".format(delta)
+        self.siz = (delta, h)
+        self.pos = (-w*index, 0)
         self.nome = "n{}".format(tit)
         "210px"
         self.w = w
@@ -108,7 +113,12 @@ class Sprite(Elemento):
         self._mostra(valor)
 
     def face(self, index):
-        self.style.marginLeft = "-{}px".format(index * self.w)
+        self.pos = (-self.w*index, 0)
+        # self.style.marginLeft = "-{}px".format(index * self.w)
+
+    # noinspection PyStatementEffect
+    def remove(self):
+        IV.limbo <= self.elt
 
 
 class Mostrador(Codigo):
@@ -120,27 +130,33 @@ class Mostrador(Codigo):
 
 
 class Cenario(Cena):
-    def __init__(self, img, index=0, delta=1600, w=WIDTH, h=700):
-        super().__init__(img)
-        self.elt.style.width = w
-        self.elt.style.height = "{}px".format(h)
-        self.elt.style.overflow = "hidden"
-        self.acampamento = Elemento("", style=dict(left=0, top=0, width=w, height="130px"))
-        self.labirinto = Elemento("", style=dict(left=0, top=140, width=w, height="400px"))
+    def __init__(self, img, index=0, delta=2, w=WIDTH, h=700):
+        self.delta = delta
+        super().__init__("")
+        self.cena = Elemento(img, w=w, h=h, cena=self)
+        self.cena.siz = (delta*w, h)
+        self.cena.pos = (-w*index, 0)
+        # self.acampamento = Elemento("", style=dict(left=0, top=0, width=w, height="130px"))
+        # self.labirinto = Elemento("", style=dict(left=0, top=140, width=w, height="400px"))
+        self.acampamento = Elemento("", x=0, y=0, w=w, h=CRDH, cena=self)
+        self.labirinto = Elemento("", x=0, y=CRDH+10, w=w, h=CRDH*3, cena=self)
         self.acampamento.nome = "Acampa"
         self.labirinto.nome = "Explora"
-        self.acampamento.entra(self)
-        self.labirinto.entra(self)
+        # self.acampamento.entra(self)
+        # self.labirinto.entra(self)
 
+        self.image.style.width = w
+        self.image.style.height = "{}px".format(h)
         self.image.style.marginLeft = "-{}px".format(index * w)
         self.image.style.width = self.image.style.maxWidth = "{}px".format(delta)
         "210px"
         self.w = w
+        self.h = h
 
-    def reface(self, img, index, delta=1600):
-        self.image.src = img
-        self.image.style.marginLeft = "-{}px".format(index * self.w)
-        self.image.style.width = self.image.style.maxWidth = "{}px".format(delta)
+    def reface(self, img, index, delta=2):
+        self.cena.pos = (-self.w*index, 0)
+        self.cena.siz = (delta*self.w, self.h)
+        self.cena.img = img
         self.labirinto.elt.html = ""
 
     def inicia(self):
@@ -160,9 +176,10 @@ class Cenario(Cena):
 class Gui:
     _fases = [(IMGS["TEMPLOTRAS1"], 1), (IMGS["TEMPLOTRAS1"], 0),
               (IMGS["TEMPLOTRAS2"], 1), (IMGS["TEMPLOTRAS2"], 0),
-              (IMGS["TEMPLOTRAS3"], 0, 800)]
+              (IMGS["TEMPLOTRAS3"], 0, 1)]
     _cenario = Cenario(*(_fases[0]))
 
+    # noinspection PyUnusedLocal
     @classmethod
     def carta(cls, face, tit=None):
         return Sprite(**SPRITES["t{}".format(face) if face.isdigit() else face])
@@ -212,6 +229,7 @@ def main(jogadores=JOGADORES, gui=GUI):
             self.joga, self.jogadas, self.nome = joga, _chance, nome
             self._inicia(nome)
 
+        # noinspection PyUnusedLocal
         def _inicia(self, jogador):
             self.joga = self._joga
             '''get_joga = "from {mod}.main import {mod}; self.joga = {mod}().joga"
