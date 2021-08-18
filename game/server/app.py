@@ -188,10 +188,13 @@ class RoomEventMiddleware:  # pylint: disable=too-few-public-methods
 
 app.add_middleware(RoomEventMiddleware)
 lib_code = os.path.join(root_path, "lib")
+static = os.path.join(root_path, "server", "static")
+print("static", static)
 app.mount("/lib", StaticFiles(directory=lib_code), name="lib")
+app.mount("/static", StaticFiles(directory=static), name="static")
 # python_code = os.path.join(root_path, filepath)
 # print("python_code", python_code)
-app.mount("/_codex", StaticFiles(directory=root_path), name="lib")
+app.mount("/_codex", StaticFiles(directory=root_path), name="python")
 
 
 @app.get("/")
